@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prüfungstrainer: Wertpapiere & Aktien (Multiple-Choice)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            min-height: 100vh;
+        }
+        .option-btn {
+            transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .option-btn:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+        }
+        .fade-in {
+            animation: fadeIn 0.25s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 8px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 8px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="text-slate-800 pb-14">
+
+    <!-- Top Navigation / Header -->
+    <header class="bg-slate-900/90 backdrop-blur-md border-b border-slate-800 sticky top-0 z-30 shadow-lg">
+        <div class="max-w-4xl mx-auto px-4 py-3.5 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-bold shadow-md shadow-emerald-950">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-base sm:text-lg font-bold text-white leading-tight">Prüfungstrainer: Wertpapiere & Aktien</h1>
+                    <p class="text-xs text-slate-400">100 % Multiple-Choice • Alle Fakten & Unterpunkte aus deinem Katalog</p>
+                </div>
+            </div>
+
+            <!-- Action Controls -->
+            <div class="flex items-center gap-2 flex-wrap">
+                <button onclick="toggleOverviewModal()" class="inline-flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-medium text-slate-200 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl transition" title="Alle Fragen im Überblick">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                    </svg>
+                    <span>Fragen-Übersicht</span>
+                </button>
+
+                <button onclick="shuffleAndRestart()" class="inline-flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-semibold text-emerald-950 bg-emerald-400 hover:bg-emerald-300 rounded-xl transition shadow-sm" title="Fragen und Antwortoptionen neu mischen">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    <span>Mischen & Neustart</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-4xl mx-auto px-4 mt-6">
+
+        <!-- Filter & Stats Bar -->
+        <div class="bg-white rounded-2xl shadow-lg border border-slate-200/80 p-4 sm:p-5 mb-6">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+                <!-- Filter Dropdown -->
+                <div class="flex flex-wrap items-center gap-2">
+                    <label for="filterSelect" class="text-xs font-bold uppercase tracking-wider text-slate-400 mr-1">Lernmodus:</label>
+                    <select id="filterSelect" onchange="applyFilter()" class="text-xs sm:text-sm font-semibold bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        <option value="all">Alle Fragen komplett (28 MC-Fragen)</option>
+                        <option value="group_original">15 Original-Hauptfragen (1:1 Katalog)</option>
+                        <option value="group_detail">Detail- & Begriffs-Check (13 Vertiefungsfragen)</option>
+                        <option value="cat_bonds">Thema: Festverzinsliche Wertpapiere (14 Fragen)</option>
+                        <option value="cat_stocks">Thema: Aktien & Börse (14 Fragen)</option>
+                    </select>
+                    <span id="retryModeBadge" class="hidden inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                        ⚡ Fehlermodus aktiv
+                    </span>
+                </div>
+
+                <!-- Live Score -->
+                <div class="flex items-center gap-2 sm:gap-3 self-end md:self-auto">
+                    <div class="flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold">
+                        <span>✓ Richtig:</span>
+                        <span id="scoreCorrect">0</span>
+                    </div>
+                    <div class="flex items-center gap-1.5 bg-rose-50 border border-rose-200 text-rose-700 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold">
+                        <span>✗ Falsch:</span>
+                        <span id="scoreWrong">0</span>
+                    </div>
+                    <div class="hidden sm:flex items-center gap-1.5 bg-slate-100 border border-slate-200 text-slate-700 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold">
+                        <span>Quote:</span>
+                        <span id="scoreRate">0%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Info & Bar -->
+            <div>
+                <div class="flex justify-between items-center text-xs sm:text-sm font-semibold text-slate-600 mb-1.5">
+                    <span id="questionCounterText">Frage 1 von 28</span>
+                    <span id="progressPercentText">0% bearbeitet</span>
+                </div>
+                <div class="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                    <div id="progressBar" class="h-full bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full transition-all duration-300" style="width: 3%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- QUIZ CARD -->
+        <div id="quizContainer" class="bg-white rounded-3xl shadow-xl border border-slate-200/90 p-5 sm:p-8 fade-in">
+            
+            <!-- Badges Row -->
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                <div class="flex flex-wrap items-center gap-2">
+                    <span id="categoryBadge" class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                        Kategorie
+                    </span>
+                    <span id="groupBadge" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        1:1 Katalogfrage
+                    </span>
+                </div>
+                <span id="questionTypeBadge" class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                    Fragetyp
+                </span>
+            </div>
+
+            <!-- Question Text -->
+            <h2 id="questionText" class="text-lg sm:text-xl font-extrabold text-slate-900 leading-snug mb-2">
+                Fragetext lädt...
+            </h2>
+            <p id="questionHint" class="text-xs sm:text-sm font-medium text-slate-500 mb-6">
+                Hinweis zum Beantworten...
+            </p>
+
+            <!-- MULTIPLE / SINGLE CHOICE OPTIONS AREA -->
+            <div id="mcArea" class="space-y-3">
+                <div id="optionsList" class="space-y-2.5"></div>
+                
+                <!-- Submit Button for Multi-Select Questions -->
+                <div id="multiSubmitWrapper" class="pt-3 hidden">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
+                        <span id="multiSelectCounter" class="text-xs sm:text-sm font-semibold text-slate-600">
+                            0 ausgewählt
+                        </span>
+                        <button id="checkMultiBtn" onclick="evaluateMultipleChoice()" class="w-full sm:w-auto px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-md shadow-indigo-100 transition flex items-center justify-center gap-2">
+                            <span>Antwort prüfen</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FEEDBACK & EXPLANATION BOX -->
+            <div id="feedbackBox" class="hidden mt-6 rounded-2xl p-5 border fade-in">
+                <div class="flex items-start gap-3.5">
+                    <div id="feedbackIcon" class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 font-bold text-white mt-0.5">
+                        ✓
+                    </div>
+                    <div class="space-y-2 flex-1">
+                        <h3 id="feedbackTitle" class="font-extrabold text-base">Richtig beantwortet!</h3>
+                        <div class="bg-white/80 rounded-xl p-3.5 border border-slate-200/80">
+                            <span class="text-xs font-bold uppercase tracking-wider text-slate-500 block mb-1">
+                                Original-Lösung & Erklärung aus deinem Lernkatalog:
+                            </span>
+                            <p id="feedbackExplanation" class="text-sm leading-relaxed text-slate-800 whitespace-pre-line font-medium"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Navigation Bar -->
+            <div class="mt-8 pt-5 border-t border-slate-100 flex items-center justify-between gap-3">
+                <button id="prevBtn" onclick="prevQuestion()" class="px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none transition flex items-center gap-1.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                    </svg>
+                    <span>Vorherige</span>
+                </button>
+
+                <button id="nextBtn" onclick="nextQuestion()" class="px-6 py-2.5 rounded-xl text-sm font-bold bg-slate-900 hover:bg-slate-800 text-white shadow-sm transition flex items-center gap-2 ml-auto">
+                    <span id="nextBtnText">Nächste Frage</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- END RESULTS SCREEN -->
+        <div id="resultScreen" class="hidden bg-white rounded-3xl shadow-xl border border-slate-200/90 p-6 sm:p-10 text-center fade-in">
+            <div id="resultBadgeIcon" class="w-20 h-20 rounded-3xl mx-auto flex items-center justify-center text-4xl mb-4 bg-emerald-50 text-emerald-600 shadow-inner">
+                📈
+            </div>
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 mb-2">Prüfungsdurchgang beendet!</h2>
+            <p id="resultSubtitle" class="text-slate-600 text-sm sm:text-base max-w-lg mx-auto mb-8">
+                Hier ist deine Gesamtauswertung für das Thema Wertpapiere & Aktien.
+            </p>
+
+            <!-- KPI Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl mx-auto mb-8">
+                <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-1">Erfolgsquote</span>
+                    <span id="finalPercent" class="text-3xl font-extrabold text-indigo-600">0%</span>
+                </div>
+                <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-4">
+                    <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 block mb-1">Richtig gelöst</span>
+                    <span id="finalCorrect" class="text-3xl font-extrabold text-emerald-700">0</span>
+                </div>
+                <div class="bg-rose-50 border border-rose-200 rounded-2xl p-4">
+                    <span class="text-xs font-bold uppercase tracking-wider text-rose-600 block mb-1">Falsch / Offen</span>
+                    <span id="finalWrong" class="text-3xl font-extrabold text-rose-700">0</span>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-wrap items-center justify-center gap-3 mb-8">
+                <button id="retryWrongBtn" onclick="startWrongQuestionsMode()" class="px-6 py-3.5 rounded-2xl font-bold bg-amber-500 hover:bg-amber-600 text-white shadow-md shadow-amber-100 transition flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <span id="retryWrongBtnText">Nur falsche Fragen wiederholen</span>
+                </button>
+
+                <button onclick="resetQuiz()" class="px-6 py-3.5 rounded-2xl font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-100 transition flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    <span>Alle Fragen neu starten</span>
+                </button>
+            </div>
+
+            <!-- Missed Questions Review List -->
+            <div id="missedQuestionsContainer" class="text-left max-w-2xl mx-auto hidden">
+                <h3 class="text-sm font-bold uppercase tracking-wider text-slate-500 mb-3">Überblick deiner falsch beantworteten Fragen:</h3>
+                <div id="missedQuestionsList" class="space-y-3 max-h-96 overflow-y-auto pr-1"></div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- QUESTION OVERVIEW MODAL -->
+    <div id="overviewModal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden fade-in">
+            <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+                <div>
+                    <h3 class="font-bold text-lg text-slate-900">Fragen-Übersicht (Wertpapiere & Aktien)</h3>
+                    <p class="text-xs text-slate-500">Klicke auf eine Frage, um direkt dorthin zu springen</p>
+                </div>
+                <button onclick="toggleOverviewModal()" class="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div id="overviewList" class="p-6 overflow-y-auto space-y-2 divide-y divide-slate-100"></div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================================
+        // VOLLSTÄNDIGER FRAGENKATALOG: WERTPAPIERE & AKTIEN (28 MULTIPLE-CHOICE-FRAGEN)
+        // Teil A (Fragen 1-15): Alle 15 Originalfragen 1:1 mit jedem einzelnen Unterpunkt
+        // Teil B (Fragen 16-28): Detail- & Begriffs-Check zu allen Fachbegriffen
+        // ============================================================================
+        const RAW_QUESTIONS = [
+            // --- TEIL A: DIE 15 ORIGINAL-HAUPTFRAGEN (1:1 AUS DEM DOKUMENT) ---
+            {
+                id: 1,
+                category: "Festverzinsliche Wertpapiere",
+                filterCat: "cat_bonds",
+                group: "group_original",
+                groupLabel: "1:1 Katalogfrage",
+                type: "single",
+                question: "Was sind festverzinsliche Wertpapiere?",
+                options: [
+                    { text: "Anleihen oder Schuldverschreibungen, bei denen der Emittent (z. B. ein Unternehmen oder Staat) dem Inhaber feste Zinszahlungen in vordefinierter Höhe und zu festen Zeitpunkten zusichert und am Ende der Laufzeit das eingezahlte Kapital zu 100 % zurückzahlt.", correct: true },
+                    { text: "Unternehmensanteile, mit denen der Käufer Miteigentümer einer Aktiengesellschaft wird und eine jährlich schwankende Dividende ohne feste Laufzeit erhält.", correct: false },
+                    { text: "Tagesgeldkonten bei der Zentralbank, bei denen der Zinssatz täglich flexibel an die aktuelle Inflationsrate angepasst wird.", correct: false },
+                    { text: "Immobilienfonds mit variabler Gewinnbeteiligung, bei denen die Rückzahlung des Kapitals ausschließlich vom Verkaufspreis der Immobilien abhängt.", correct: false }
+                ],
+                explanation: "Festverzinsliche Wertpapiere sind Anleihen oder Schuldverschreibungen, bei denen der Emittent (z. B. ein Unternehmen oder Staat) dem Inhaber feste Zinszahlungen in vordefinierter Höhe und zu festen Zeitpunkten zusichert. Am Ende der Laufzeit wird das eingezahlte Kapital zu 100 % zurückgezahlt."
+            },
+            {
+                id: 2,
+                category: "Festverzinsliche Wertpapiere",
+                filterCat: "cat_bonds",
+                group: "group_original",
+                groupLabel: "1:1 Katalogfrage",
+                type: "single",
+                question: "Wie funktionieren festverzinsliche Wertpapiere?",
+                options: [
+                    { text: "Das Prinzip ähnelt einem Kredit: Der Emittent leiht sich Geld von den Investoren und zahlt dafür Zinsen. Am Ende der Laufzeit wird das geliehene Geld zurückgezahlt. Die Höhe der Zinsen und die Laufzeit sind festgelegt.", correct: true },
+                    { text: "Der Investor erwirbt Stimmrechte für die Hauptversammlung und haftet mit seinem Privatvermögen für sämtliche Schulden des Emittenten.", correct: false },
+                    { text: "Der Emittent verwaltet das Geld treuhänderisch auf einem Girokonto und schüttet nur dann Erträge aus, wenn der Aktienindex steigt.", correct: false },
+                    { text: "Das Prinzip entspricht einer Schadenversicherung: Beiträge werden in einen Risikotopf eingezahlt und nur bei einem Börsencrash ausgezahlt.", correct: false }
+                ],
+                explanation: "Das Prinzip ähnelt einem Kredit. Der Emittent leiht sich Geld von den Investoren und zahlt dafür Zinsen. Am Ende der Laufzeit wird das geliehene Geld zurückgezahlt. Die Höhe der Zinsen und die Laufzeit sind festgelegt."
+            },
+            {
+                id: 3,
+                category: "Festverzinsliche Wertpapiere",
+                filterCat: "cat_bonds",
+                group: "group_original",
+                groupLabel: "1:1 Katalogfrage",
+                type: "multiple",
+                question: "Welche Emittenten bzw. bekannten Arten von festverzinslichen Wertpapieren gibt es laut Fragenkatalog?",
+                options: [
+                    { text: "Unternehmensanleihen: Ausgegeben von Unternehmen.", correct: true },
+                    { text: "Staatsanleihen: Ausgegeben von Staaten.", correct: true },
+                    { text: "Länderanleihen: Ausgegeben von Bundesländern.", correct: true },
+                    { text: "Stammaktien: Ausgegeben von Privatpersonen.", correct: false },
+                    { text: "Vorzugsanleihen: Ausgegeben ausschließlich von den Finanzämtern.", correct: false },
+                    { text: "Junge Dividendenpapiere: Ausgegeben von der Börsenaufsicht.", correct: false }
+                ],
+                explanation: "Zu den bekanntesten festverzinslichen Wertpapieren gehören:\n• Unternehmensanleihen: Ausgegeben von Unternehmen\n• Staatsanleihen: Ausgegeben von Staaten\n• Länderanleihen: Ausgegeben von Bundesländern"
+            },
+            {
+                id: 4,
+                category: "Festverzinsliche Wertpapiere",
+                filterCat: "cat_bonds",
+                group: "group_original",
+                groupLabel: "1:1 Katalogfrage",
+                type: "multiple",
+                question: "Welche Vorteile bieten festverzinsliche Wertpapiere?",
+                options: [
+                    { text: "Planbarkeit: Feste Zinszahlung und Rückzahlung des Kapitals am Ende der Laufzeit.", correct: true },
+                    { text: "Sicherheit: Hohe Sicherheit bei Emittenten mit guter Bonität.", correct: true },
+                    { text: "Handelbarkeit: Festverzinsliche Wertpapiere können jederzeit an der Börse gehandelt werden.", correct: true },
+                    { text: "Stimmrecht: Inhaber erhalten automatisch ein Stimmrecht auf der Hauptversammlung des Emittenten.", correct: false },
+                    { text: "Steuerfreiheit: Zinsgewinne aus festverzinslichen Wertpapieren sind in Deutschland immer zu 100 % steuerfrei.", correct: false },
+                    { text: "Inflationsausgleich: Der vereinbarte Festzins erhöht sich automatisch bei steigender Inflation.", correct: false }
+                ],
+                explanation: "Die 3 Vorteile festverzinslicher Wertpapiere sind:\n• Planbarkeit: Feste Zinszahlung und Rückzahlung des Kapitals am Ende der Laufzeit.\n• Sicherheit: Hohe Sicherheit bei Emittenten mit guter Bonität.\n• Handelbarkeit: Festverzinsliche Wertpapiere können jederzeit an der Börse gehandelt werden."
+            },
+            {
+                id: 5,
+                category: "Festverzinsliche Wertpapiere",
+                filterCat: "cat_bonds",
+                group: "group_original",
+                groupLabel: "1:1 Katalogfrage",
+                type: "multiple",
+                question: "Welche Risiken bestehen bei festverzinslichen Wertpapieren?",
+                options: [
+                    { text: "Emittentenrisiko: Das Risiko, dass der Emittent nicht in der Lage ist, die Zinsen und das Kapital zurückzuzahlen.", correct: true },
+                    { text: "Zinsrisiko: Änderungen der Marktzinsen können den Wert der Anleihe beeinflussen.", correct: true },
+                    { text: "Inflationsrisiko: Inflation kann die Kaufkraft des zurückgezahlten Kapitals reduzieren.", correct: true },
+                    { text: "Nachschusspflichtrisiko: Der Anleger muss bei Verlusten des Staates weiteres Privatvermögen nachschießen.", correct: false },
+                    { text: "Dividendenkürzungsrisiko: Die Hauptversammlung kann den vereinbarten Festzins nachträglich beliebig kürzen.", correct: false },
+                    { text: "Sperrfristrisiko: Festverzinsliche Wertpapiere dürfen vor Laufzeitende nicht an der Börse gehandelt werden.", correct: false }
+                ],
+                explanation: "Die 3 Risiken bei festverzinslichen Wertpapieren sind:\n• Emittentenrisiko: Das Risiko, dass der Emittent nicht in der Lage ist, die Zinsen und das Kapital zurückzuzahlen.\n• Zinsrisiko: Änderungen der Marktzinsen können den Wert der Anleihe beeinflussen.\n• Inflationsrisiko: Inflation kann die Kaufkraft des zurückgezahlten Kapitals reduzieren."
+            },
+            {
+                id: 6,
+                category: "Festverzinsliche Wertpapiere",
+                filterCat: "cat_bonds",
+                group: "group_original",
+                groupLabel: "1:1 Katalogfrage",
+                type: "multiple",
+                question: "Wie kann ich festverzinsliche Wertpapiere kaufen und verwalten?",
+                options: [
+                    { text: "Festverzinsliche Wertpapiere können direkt über die Börse gekauft werden.", correct: true },
+                    { text: "Man benötigt ein Wertpapierdepot bei einer Bank oder einem Online-Broker, um die Wertpapiere zu handeln und zu verwahren.", correct: true },
+                    { text: "Zusätzlich wird ein Verrechnungskonto benötigt.", correct: true },
+                    { text: "Der Kauf ist ausschließlich über einen Notar mit Eintragung ins Grundbuch möglich.", correct: false },
+                    { text: "Man benötigt kein Depot, da Anleihen direkt auf einem herkömmlichen Sparbuch verwahrt werden.", correct: false }
+                ],
+                explanation: "Festverzinsliche Wertpapiere können direkt über die Börse gekauft werden. Sie benötigen ein Wertpapierdepot bei einer Bank oder einem Online-Broker, um die Wertpapiere zu handeln und zu verwahren, sowie ein Verrechnungskonto."
+            },
+            {
+                id: 7,
+                category: "Festverzinsliche Wertpapiere",
+                filterCat: "cat_bonds",
+                group: "group_original",
+                groupLabel: "1:1 Katalogfrage",
+                type: "single",
+                question: "Welche Steuern muss ich auf festverzinsliche Wertpapiere zahlen?",
+                options: [
+                    { text: "Gewinne müssen als Einkünfte aus Kapitalanlagen versteuert werden, typischerweise mit 25 % + 5,5 % Soli + ggf. Kirchensteuer. Die Steuer wird erst berechnet, wenn ein gestellter Freistellungsauftrag ausgeschöpft ist.", correct: true },
+                    { text: "Gewinne unterliegen pauschal der Umsatzsteuer von 19 % ab dem ersten Euro Gewinn ohne Möglichkeit eines Freistellungsauftrags.", correct: false },
+                    { text: "Auf festverzinsliche Wertpapiere fällt nur beim Kauf eine Gebühr von 10 % an, sämtliche Zinserträge sind steuerfrei.", correct: false },
+                    { text: "Sie werden erst nach 12 Jahren Haltedauer mit einem festen Ertragsanteil von 18 % versteuert.", correct: false }
+                ],
+                explanation: "Gewinne aus festverzinslichen Wertpapieren müssen als Einkünfte aus Kapitalanlagen versteuert werden, typischerweise mit einem Steuersatz von 25 % + 5,5 % Soli + ggf. Kirchensteuer. Die Steuer wird erst berechnet, wenn ein gestellter Freistellungsauftrag ausgeschöpft ist."
+            },
+            {
+                id: 8,
+                category: "Aktien & Börse",
+                filterCat: "cat_stocks",
+                group: "group_original",
+                groupLabel: "1:1 Katalogfrage",
+                type: "single",
+                question: "Was sind Aktien?",
+                options: [
+                    { text: "Aktien sind Anteile an einem Unternehmen, die an einer Wertpapierbörse erworben werden können. Durch den Kauf einer Aktie wird der Käufer Miteigentümer des Unternehmens.", correct: true },
+                    { text: "Aktien sind festverzinsliche Schuldverschreibungen eines Staates mit fester Laufzeit und 100 % Kapitalrückzahlung.", correct: false },
+                    { text: "Aktien sind reine Kreditverträge, bei denen der Anleger einer Bank Geld leiht und dafür monatlich einen festen Zins erhält.", correct: false },
+                    { text: "Aktien sind staatlich garantierte Spareinlagen ohne Kursschwankungsrisiko.", correct: false }
+                ],
+                explanation: "Aktien sind Anteile an einem Unternehmen, die an einer Wertpapierbörse erworben werden können. Durch den Kauf einer Aktie wird der Käufer Miteigentümer des Unternehmens."
+            },
+            {
+                id: 9,
+                category: "Aktien & Börse",
+                filterCat: "cat_stocks",
+                group: "group_original",
+                groupLabel: "1:1 Katalogfrage",
+                type: "single",
+                question: "Wo werden Aktien gehandelt?",
+                options: [
+                    { text: "Aktien werden an Börsen gehandelt, wo ständig aktuelle Kurse ermittelt werden. Die größten Börsen der Welt sind die New York Stock Exchange und die NASDAQ, während in Deutschland die Frankfurter Börse marktbestimmend ist.", correct: true },
+                    { text: "Ausschließlich direkt bei den Hausbanken zu festen Wochenpreisen; die größte Börse der Welt ist London, in Deutschland ist die Börse Stuttgart marktbestimmend.", correct: false },
+                    { text: "Nur einmal jährlich auf der Hauptversammlung des Unternehmens; in Deutschland ist die Börse Berlin marktbestimmend.", correct: false },
+                    { text: "An staatlichen Zentralbanken; die größten Börsen weltweit sind Tokio und Paris, in Deutschland ist München marktbestimmend.", correct: false }
+                ],
+                explanation: "Aktien werden an Börsen gehandelt, wo ständig aktuelle Kurse ermittelt werden. Die größten Börsen der Welt sind die New York Stock Exchange (NYSE) und die NASDAQ, während in Deutschland die Frankfurter Börse marktbestimmend ist."
+            },
+            {
+                id: 10,
+                category: "Aktien & Börse",
+                filterCat: "cat_stocks",
+                group: "group_original",
+                groupLabel: "1:1 Katalogfrage",
+                type: "single",
+                question: "Wie funktioniert der Aktienhandel?",
+                options: [
+                    { text: "Der Aktienhandel basiert auf dem Prinzip von Angebot und Nachfrage. Wenn es mehr Käufer als Verkäufer gibt, steigt der Kurs der Aktie, und umgekehrt sinkt der Kurs, wenn es mehr Verkäufer als Käufer gibt.", correct: true },
+                    { text: "Wenn es mehr Verkäufer als Käufer gibt, steigt der Kurs der Aktie automatisch an, weil das Handelsvolumen wächst.", correct: false },
+                    { text: "Die Kurse werden jeweils zum Jahresbeginn vom Vorstand der Aktiengesellschaft verbindlich für 12 Monate festgelegt.", correct: false },
+                    { text: "Der Aktienkurs richtet sich ausschließlich nach der Höhe des gesetzlichen Leitzinses und schwankt untertags nicht.", correct: false }
+                ],
+                explanation: "Der Aktienhandel basiert auf dem Prinzip von Angebot und Nachfrage. Wenn es mehr Käufer als Verkäufer gibt, steigt der Kurs der Aktie, und umgekehrt sinkt der Kurs, wenn es mehr Verkäufer als Käufer gibt."
+            },
+            {
+                id: 11,
+                category: "Aktien & Börse",
+                filterCat: "cat_stocks",
+                group: "group_original",
+                groupLabel: "1:1 Katalogfrage",
+                type: "multiple",
+                question: "Wie kann ich Aktien kaufen? Welche Schritte müssen Sie laut Katalog durchführen?",
+                options: [
+                    { text: "Ein Wertpapierdepot (Depot) bei einer Bank oder einem Online-Broker eröffnen.", correct: true },
+                    { text: "Ein Verrechnungskonto anlegen, auf dem die Transaktionen verrechnet werden.", correct: true },
+                    { text: "Sich über die Unternehmen und ihre Aktien informieren.", correct: true },
+                    { text: "Eine Anlagestrategie festlegen und die Aktien auswählen.", correct: true },
+                    { text: "Wertpapierkennnummer (WKN) oder ISIN heraussuchen.", correct: true },
+                    { text: "Die Aktien über die Börse kaufen und im Depot verwahren.", correct: true },
+                    { text: "Eine verpflichtende Kreditfinanzierung für den Aktienkauf aufnehmen.", correct: false },
+                    { text: "Vor jedem Kauf eine schriftliche Genehmigung der Hauptversammlung einholen.", correct: false }
+                ],
+                explanation: "Um Aktien zu kaufen, müssen folgende 6 Schritte durchgeführt werden:\n1. Ein Wertpapierdepot (Depot) bei einer Bank oder einem Online-Broker eröffnen.\n2. Ein Verrechnungskonto anlegen, auf dem die Transaktionen verrechnet werden.\n3. Sich über die Unternehmen und ihre Aktien informieren.\n4. Eine Anlagestrategie festlegen und die Aktien auswählen.\n5. Wertpapierkennnummer (WKN) oder ISIN heraussuchen.\n6. Die Aktien über die Börse kaufen und im Depot verwahren."
+            },
+            {
+                id: 12,
+                category: "Aktien & Börse",
+                filterCat: "cat_stocks",
+                group: "group_original",
+                groupLabel: "1:1 Katalogfrage",
+                type: "multiple",
+                question: "Welche Vorteile und Risiken (Nachteile) haben Aktien?",
+                options: [
+                    { text: "Vorteil: Möglichkeit, durch steigende Kurse und Dividenden Geld zu verdienen.", correct: true },
+                    { text: "Vorteil: Breite Streuung des Portfolios durch Investition in verschiedene Unternehmen.", correct: true },
+                    { text: "Nachteil/Risiko: Aktienkurse können stark schwanken, was zu Verlusten führen kann.", correct: true },
+                    { text: "Nachteil/Risiko: Es besteht das Risiko eines Totalverlusts, wenn das Unternehmen insolvent geht.", correct: true },
+                    { text: "Nachteil/Risiko: Volatilität des Marktes kann zu unerwarteten Kursänderungen führen.", correct: true },
+                    { text: "Vorteil: Garantierte 100 %ige Rückzahlung des eingezahlten Kapitals zu einem festen Enddatum.", correct: false },
+                    { text: "Nachteil/Risiko: Aktien können während der Laufzeit niemals an einer Börse verkauft werden.", correct: false }
+                ],
+                explanation: "Vorteile:\n• Möglichkeit, durch steigende Kurse und Dividenden Geld zu verdienen.\n• Breite Streuung des Portfolios durch Investition in verschiedene Unternehmen.\n\nNachteile:\n• Aktienkurse können stark schwanken, was zu Verlusten führen kann.\n• Es besteht das Risiko eines Totalverlusts, wenn das Unternehmen insolvent geht.\n• Volatilität des Marktes kann zu unerwarteten Kursänderungen führen."
+            },
+            {
+                id: 13,
+                category: "Aktien & Börse",
+                filterCat: "cat_stocks",
+                group: "group_original",
+                groupLabel: "1:1 Katalogfrage",
+                type: "single",
+                question: "Was sind Dividenden und wie funktionieren sie?",
+                options: [
+                    { text: "Dividenden sind prozentuale Gewinnbeteiligungen, die die meisten Aktiengesellschaften ihren Aktionären jährlich auszahlen. Sie bieten eine zusätzliche Einkommensquelle für Aktionäre.", correct: true },
+                    { text: "Dividenden sind staatlich garantierte Festzinsen, die unabhängig vom Gewinn des Unternehmens jeden Monat ausgezahlt werden.", correct: false },
+                    { text: "Dividenden sind Verwaltungsgebühren, die Aktionäre jährlich für das Führen ihres Wertpapierdepots an die Börse zahlen.", correct: false },
+                    { text: "Dividenden sind Bezugsrechte, die ausschließlich bei der Insolvenz eines Unternehmens ausgezahlt werden.", correct: false }
+                ],
+                explanation: "Dividenden sind prozentuale Gewinnbeteiligungen, die die meisten Aktiengesellschaften ihren Aktionären jährlich auszahlen. Sie bieten eine zusätzliche Einkommensquelle für Aktionäre."
+            },
+            {
+                id: 14,
+                category: "Aktien & Börse",
+                filterCat: "cat_stocks",
+                group: "group_original",
+                groupLabel: "1:1 Katalogfrage",
+                type: "multiple",
+                question: "Welche Arten von Aktien gibt es und wie sind sie definiert?",
+                options: [
+                    { text: "Stammaktien: Verleihen das Recht, an der Hauptversammlung des Unternehmens teilzunehmen und abzustimmen.", correct: true },
+                    { text: "Vorzugsaktien: Bieten höhere Dividenden, aber kein Stimmrecht.", correct: true },
+                    { text: "Junge Aktien: Werden bei einer Kapitalerhöhung neu von der AG herausgegeben.", correct: true },
+                    { text: "Stammaktien: Bieten höhere Dividenden, schließen aber das Stimmrecht auf der Hauptversammlung aus.", correct: false },
+                    { text: "Vorzugsaktien: Verleihen doppeltes Stimmrecht auf der Hauptversammlung, zahlen dafür aber keine Dividende.", correct: false },
+                    { text: "Junge Aktien: Sind Anleihen von Bundesländern mit einer Laufzeit von unter 12 Monaten.", correct: false }
+                ],
+                explanation: "Arten von Aktien:\n• Stammaktien: Verleihen das Recht, an der Hauptversammlung des Unternehmens teilzunehmen und abzustimmen.\n• Vorzugsaktien: Bieten höhere Dividenden, aber kein Stimmrecht.\n• Junge Aktien: Werden bei einer Kapitalerhöhung neu von der AG herausgegeben."
+            },
+            {
+                id: 15,
+                category: "Aktien & Börse",
+                filterCat: "cat_stocks",
+                group: "group_original",
+                groupLabel: "1:1 Katalogfrage",
+                type: "multiple",
+                question: "Wie kann ich mein Risiko beim Investieren in Aktien minimieren?",
+                options: [
+                    { text: "Diversifizieren Sie Ihr Portfolio, indem Sie in verschiedene Unternehmen investieren.", correct: true },
+                    { text: "Investieren Sie langfristig, um kurzfristige Marktschwankungen zu glätten.", correct: true },
+                    { text: "Verwenden Sie nur frei verfügbares Geld und vermeiden Sie Kredite für Investitionen.", correct: true },
+                    { text: "Eröffnen Sie Ihr Depot mit kleinen Beträgen und erhöhen Sie es allmählich.", correct: true },
+                    { text: "Nehmen Sie einen hohen Bankkredit auf, um das gesamte Geld in eine einzige Aktie zu investieren.", correct: false },
+                    { text: "Kaufen und verkaufen Sie täglich bei jeder kleinen Kursschwankung sämtliche Positionen.", correct: false }
+                ],
+                explanation: "Risikominimierung durch 4 Maßnahmen:\n• Diversifizieren Sie Ihr Portfolio, indem Sie in verschiedene Unternehmen investieren.\n• Investieren Sie langfristig, um kurzfristige Marktschwankungen zu glätten.\n• Verwenden Sie nur frei verfügbares Geld und vermeiden Sie Kredite für Investitionen.\n• Eröffnen Sie Ihr Depot mit kleinen Beträgen und erhöhen Sie es allmählich."
+            },
+
+            // --- TEIL B: VERTIEFUNGSFRAGEN ZU ALLEN EINZELBEGRIFFEN & UNTERPUNKTEN ---
+            {
+                id: 16,
+                category: "Festverzinsliche Wertpapiere",
+                filterCat: "cat_bonds",
+                group: "group_detail",
+                groupLabel: "Detail-Check",
+                type: "single",
+                question: "Zu welchem Prozentsatz wird das eingezahlte Kapital bei festverzinslichen Wertpapieren regulär am Ende der Laufzeit zurückgezahlt?",
+                options: [
+                    { text: "Zu 100 %.", correct: true },
+                    { text: "Zu 50 % zuzüglich einer variablen Dividende.", correct: false },
+                    { text: "Zu 25 % abzüglich Solidaritätszuschlag.", correct: false },
+                    { text: "Es erfolgt keine Kapitalrückzahlung, da nur laufende Zinsen gezahlt werden.", correct: false }
+                ],
+                explanation: "Am Ende der Laufzeit wird das eingezahlte Kapital bei festverzinslichen Wertpapieren zu 100 % zurückgezahlt."
+            },
+            {
+                id: 17,
+                category: "Festverzinsliche Wertpapiere",
+                filterCat: "cat_bonds",
+                group: "group_detail",
+                groupLabel: "Detail-Check",
+                type: "single",
+                question: "Wie bezeichnet man festverzinsliche Wertpapiere, die speziell von Bundesländern ausgegeben werden?",
+                options: [
+                    { text: "Länderanleihen", correct: true },
+                    { text: "Unternehmensanleihen", correct: false },
+                    { text: "Vorzugsaktien", correct: false },
+                    { text: "Junge Aktien", correct: false }
+                ],
+                explanation: "Von Bundesländern ausgegebene festverzinsliche Wertpapiere heißen Länderanleihen (von Staaten: Staatsanleihen; von Unternehmen: Unternehmensanleihen)."
+            },
+            {
+                id: 18,
+                category: "Festverzinsliche Wertpapiere",
+                filterCat: "cat_bonds",
+                group: "group_detail",
+                groupLabel: "Detail-Check",
+                type: "single",
+                question: "Welcher Begriff beschreibt das Risiko, dass der Herausgeber einer Anleihe nicht in der Lage ist, die Zinsen und das Kapital zurückzuzahlen?",
+                options: [
+                    { text: "Emittentenrisiko", correct: true },
+                    { text: "Zinsrisiko", correct: false },
+                    { text: "Inflationsrisiko", correct: false },
+                    { text: "Dividendenrisiko", correct: false }
+                ],
+                explanation: "Emittentenrisiko: Das Risiko, dass der Emittent nicht in der Lage ist, die Zinsen und das Kapital zurückzuzahlen."
+            },
+            {
+                id: 19,
+                category: "Festverzinsliche Wertpapiere",
+                filterCat: "cat_bonds",
+                group: "group_detail",
+                groupLabel: "Detail-Check",
+                type: "single",
+                question: "Welches Risiko bei festverzinslichen Wertpapieren beschreibt, dass Änderungen der Marktzinsen den Wert der Anleihe beeinflussen können?",
+                options: [
+                    { text: "Zinsrisiko", correct: true },
+                    { text: "Emittentenrisiko", correct: false },
+                    { text: "Inflationsrisiko", correct: false },
+                    { text: "Währungsrisiko", correct: false }
+                ],
+                explanation: "Zinsrisiko: Änderungen der Marktzinsen können den Wert der Anleihe beeinflussen."
+            },
+            {
+                id: 20,
+                category: "Festverzinsliche Wertpapiere",
+                filterCat: "cat_bonds",
+                group: "group_detail",
+                groupLabel: "Detail-Check",
+                type: "single",
+                question: "Welches Risiko besteht darin, dass die Geldentwertung die Kaufkraft des am Laufzeitende zurückgezahlten Kapitals reduziert?",
+                options: [
+                    { text: "Inflationsrisiko", correct: true },
+                    { text: "Zinsrisiko", correct: false },
+                    { text: "Emittentenrisiko", correct: false },
+                    { text: "Stimmrechtsrisiko", correct: false }
+                ],
+                explanation: "Inflationsrisiko: Inflation kann die Kaufkraft des zurückgezahlten Kapitals reduzieren."
+            },
+            {
+                id: 21,
+                category: "Festverzinsliche Wertpapiere",
+                filterCat: "cat_bonds",
+                group: "group_detail",
+                groupLabel: "Detail-Check",
+                type: "single",
+                question: "Unter welcher Voraussetzung bieten festverzinsliche Wertpapiere laut Katalog eine besonders hohe Sicherheit?",
+                options: [
+                    { text: "Bei einem Emittenten mit guter Bonität.", correct: true },
+                    { text: "Wenn man für den Kauf einen Bankkredit aufnimmt.", correct: false },
+                    { text: "Wenn das Unternehmen keine Hauptversammlung abhält.", correct: false },
+                    { text: "Wenn man auf einen Freistellungsauftrag verzichtet.", correct: false }
+                ],
+                explanation: "Sicherheit bei festverzinslichen Wertpapieren bedeutet: Hohe Sicherheit bei Emittenten mit guter Bonität."
+            },
+            {
+                id: 22,
+                category: "Festverzinsliche Wertpapiere",
+                filterCat: "cat_bonds",
+                group: "group_detail",
+                groupLabel: "Detail-Check",
+                type: "single",
+                question: "Ab wann wird die Steuer (25 % + 5,5 % Soli + ggf. Kirchensteuer) auf Gewinne aus festverzinslichen Wertpapieren erst berechnet?",
+                options: [
+                    { text: "Erst wenn ein gestellter Freistellungsauftrag ausgeschöpft ist.", correct: true },
+                    { text: "Sofort bei Depoteröffnung noch vor dem ersten Wertpapierkauf.", correct: false },
+                    { text: "Erst bei Erreichen des 67. Lebensjahres.", correct: false },
+                    { text: "Nur dann, wenn die Anleihe vorzeitig mit Verlust verkauft wird.", correct: false }
+                ],
+                explanation: "Die Steuer (25 % + 5,5 % Soli + ggf. Kirchensteuer) wird erst berechnet, wenn ein gestellter Freistellungsauftrag ausgeschöpft ist."
+            },
+            {
+                id: 23,
+                category: "Aktien & Börse",
+                filterCat: "cat_stocks",
+                group: "group_detail",
+                groupLabel: "Detail-Check",
+                type: "single",
+                question: "Welche sind die beiden größten Börsen der Welt und welche Börse ist in Deutschland marktbestimmend?",
+                options: [
+                    { text: "Weltweit: New York Stock Exchange (NYSE) & NASDAQ | Deutschland: Frankfurter Börse", correct: true },
+                    { text: "Weltweit: London Stock Exchange & Tokio | Deutschland: Stuttgarter Börse", correct: false },
+                    { text: "Weltweit: Frankfurter Börse & Pariser Börse | Deutschland: Börse Hannover", correct: false },
+                    { text: "Weltweit: DAX & Dow Jones | Deutschland: Hamburger Börse", correct: false }
+                ],
+                explanation: "Die größten Börsen der Welt sind die New York Stock Exchange und die NASDAQ, während in Deutschland die Frankfurter Börse marktbestimmend ist."
+            },
+            {
+                id: 24,
+                category: "Aktien & Börse",
+                filterCat: "cat_stocks",
+                group: "group_detail",
+                groupLabel: "Detail-Check",
+                type: "single",
+                question: "Wie verhält sich der Aktienkurs nach dem Prinzip von Angebot und Nachfrage?",
+                options: [
+                    { text: "Mehr Käufer als Verkäufer = Kurs steigt | Mehr Verkäufer als Käufer = Kurs sinkt", correct: true },
+                    { text: "Mehr Käufer als Verkäufer = Kurs sinkt | Mehr Verkäufer als Käufer = Kurs steigt", correct: false },
+                    { text: "Mehr Käufer als Verkäufer = Kurs bleibt konstant | Mehr Verkäufer = Dividende steigt", correct: false },
+                    { text: "Angebot und Nachfrage haben keinen Einfluss auf den Aktienkurs.", correct: false }
+                ],
+                explanation: "Wenn es mehr Käufer als Verkäufer gibt, steigt der Kurs der Aktie, und umgekehrt sinkt der Kurs, wenn es mehr Verkäufer als Käufer gibt."
+            },
+            {
+                id: 25,
+                category: "Aktien & Börse",
+                filterCat: "cat_stocks",
+                group: "group_detail",
+                groupLabel: "Detail-Check",
+                type: "single",
+                question: "Welche Kennung müssen Sie beim Aktienkauf heraussuchen, um das gewünschte Wertpapier eindeutig zu identifizieren?",
+                options: [
+                    { text: "Die Wertpapierkennnummer (WKN) oder ISIN", correct: true },
+                    { text: "Die IBAN des Unternehmensvorstands", correct: false },
+                    { text: "Die Steueridentifikationsnummer der Börse", correct: false },
+                    { text: "Die Versicherungsscheinnummer des Depots", correct: false }
+                ],
+                explanation: "Vor dem Kauf über die Börse muss man die Wertpapierkennnummer (WKN) oder ISIN der ausgewählten Aktie heraussuchen."
+            },
+            {
+                id: 26,
+                category: "Aktien & Börse",
+                filterCat: "cat_stocks",
+                group: "group_detail",
+                groupLabel: "Detail-Check",
+                type: "single",
+                question: "Welche Aktienart verleiht das Recht, an der Hauptversammlung des Unternehmens teilzunehmen und dort abzustimmen?",
+                options: [
+                    { text: "Stammaktien", correct: true },
+                    { text: "Vorzugsaktien", correct: false },
+                    { text: "Junge Aktien", correct: false },
+                    { text: "Länderanleihen", correct: false }
+                ],
+                explanation: "Stammaktien verleihen das Recht, an der Hauptversammlung des Unternehmens teilzunehmen und abzustimmen."
+            },
+            {
+                id: 27,
+                category: "Aktien & Börse",
+                filterCat: "cat_stocks",
+                group: "group_detail",
+                groupLabel: "Detail-Check",
+                type: "single",
+                question: "Was kennzeichnet Vorzugsaktien im Unterschied zu Stammaktien?",
+                options: [
+                    { text: "Sie bieten höhere Dividenden, aber kein Stimmrecht.", correct: true },
+                    { text: "Sie bieten ein doppeltes Stimmrecht, aber keinerlei Dividende.", correct: false },
+                    { text: "Sie werden ausschließlich bei einer Kapitalerhöhung neu herausgegeben.", correct: false },
+                    { text: "Sie haben eine feste Laufzeit und einen garantierten Festzins.", correct: false }
+                ],
+                explanation: "Vorzugsaktien bieten höhere Dividenden, aber kein Stimmrecht."
+            },
+            {
+                id: 28,
+                category: "Aktien & Börse",
+                filterCat: "cat_stocks",
+                group: "group_detail",
+                groupLabel: "Detail-Check",
+                type: "single",
+                question: "Wann werden sogenannte 'Junge Aktien' herausgegeben und wann droht bei Aktien ein Totalverlust?",
+                options: [
+                    { text: "Junge Aktien werden bei einer Kapitalerhöhung neu von der AG herausgegeben; ein Totalverlust droht, wenn das Unternehmen insolvent geht.", correct: true },
+                    { text: "Junge Aktien werden bei einer Insolvenz herausgegeben; ein Totalverlust entsteht bereits bei leicht steigenden Marktzinsen.", correct: false },
+                    { text: "Junge Aktien werden nur an Neukunden eines Online-Brokers vergeben; ein Totalverlust ist bei Aktien ausgeschlossen.", correct: false },
+                    { text: "Junge Aktien sind Staatsanleihen; ein Totalverlust tritt ein, sobald der Freistellungsauftrag ausgeschöpft ist.", correct: false }
+                ],
+                explanation: "Junge Aktien werden bei einer Kapitalerhöhung neu von der AG herausgegeben. Bei Aktien besteht zudem das Risiko eines Totalverlusts, wenn das Unternehmen insolvent geht."
+            }
+        ];
+
+        // ============================================================================
+        // APP STATE & OPTION SHUFFLING HELPER
+        // ============================================================================
+        let preparedQuestions = [];
+        let activeQuestions = [];
+        let currentIndex = 0;
+        let userResults = {}; // questionId -> { answered: true, isCorrect: bool, selectedIndices: [] }
+        let currentMultiSelection = [];
+        let isRetryMode = false;
+
+        function shuffleArray(arr) {
+            const copy = [...arr];
+            for (let i = copy.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [copy[i], copy[j]] = [copy[j], copy[i]];
+            }
+            return copy;
+        }
+
+        function prepareQuestionsWithShuffledOptions(shuffleQuestionOrder = false) {
+            let baseList = RAW_QUESTIONS.map(q => {
+                const shuffledOpts = shuffleArray(q.options);
+                const correctIndices = [];
+                shuffledOpts.forEach((opt, idx) => {
+                    if (opt.correct) correctIndices.push(idx);
+                });
+                return {
+                    ...q,
+                    displayOptions: shuffledOpts.map(o => o.text),
+                    correctIndices: correctIndices
+                };
+            });
+
+            if (shuffleQuestionOrder) {
+                baseList = shuffleArray(baseList);
+            }
+            preparedQuestions = baseList;
+        }
+
+        // ============================================================================
+        // INITIALIZATION & FILTERING
+        // ============================================================================
+        window.onload = function () {
+            prepareQuestionsWithShuffledOptions(false);
+            applyFilter();
+        };
+
+        function applyFilter() {
+            const filterVal = document.getElementById('filterSelect').value;
+            isRetryMode = false;
+            document.getElementById('retryModeBadge').classList.add('hidden');
+
+            if (filterVal === 'all') {
+                activeQuestions = [...preparedQuestions];
+            } else if (filterVal === 'group_original' || filterVal === 'group_detail') {
+                activeQuestions = preparedQuestions.filter(q => q.group === filterVal);
+            } else {
+                activeQuestions = preparedQuestions.filter(q => q.filterCat === filterVal);
+            }
+
+            currentIndex = 0;
+            userResults = {};
+            showQuizView();
+            renderQuestion();
+        }
+
+        function shuffleAndRestart() {
+            prepareQuestionsWithShuffledOptions(true);
+            const filterVal = document.getElementById('filterSelect').value;
+            isRetryMode = false;
+            document.getElementById('retryModeBadge').classList.add('hidden');
+
+            if (filterVal === 'all') {
+                activeQuestions = [...preparedQuestions];
+            } else if (filterVal === 'group_original' || filterVal === 'group_detail') {
+                activeQuestions = preparedQuestions.filter(q => q.group === filterVal);
+            } else {
+                activeQuestions = preparedQuestions.filter(q => q.filterCat === filterVal);
+            }
+
+            currentIndex = 0;
+            userResults = {};
+            showQuizView();
+            renderQuestion();
+        }
+
+        function resetQuiz() {
+            prepareQuestionsWithShuffledOptions(false);
+            applyFilter();
+        }
+
+        function startWrongQuestionsMode() {
+            const wrongIds = Object.keys(userResults)
+                .filter(id => userResults[id] && !userResults[id].isCorrect)
+                .map(id => parseInt(id));
+
+            if (wrongIds.length === 0) return;
+
+            // Re-shuffle options for the retry round so the user learns by content, not position
+            prepareQuestionsWithShuffledOptions(false);
+            activeQuestions = preparedQuestions.filter(q => wrongIds.includes(q.id));
+            currentIndex = 0;
+            userResults = {};
+            isRetryMode = true;
+            document.getElementById('retryModeBadge').classList.remove('hidden');
+            showQuizView();
+            renderQuestion();
+        }
+
+        function showQuizView() {
+            document.getElementById('resultScreen').classList.add('hidden');
+            document.getElementById('quizContainer').classList.remove('hidden');
+        }
+
+        // ============================================================================
+        // RENDER QUESTION
+        // ============================================================================
+        function renderQuestion() {
+            const q = activeQuestions[currentIndex];
+            if (!q) return;
+
+            currentMultiSelection = [];
+            updateTopStats();
+
+            // Category & Group Badges
+            document.getElementById('categoryBadge').textContent = `${q.category} • Frage #${q.id}`;
+            const groupBadge = document.getElementById('groupBadge');
+            groupBadge.textContent = q.groupLabel;
+            if (q.group === 'group_original') {
+                groupBadge.className = "inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200";
+            } else {
+                groupBadge.className = "inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-sky-50 text-sky-700 border border-sky-200";
+            }
+
+            // Question Type Badge & Hint
+            const typeBadge = document.getElementById('questionTypeBadge');
+            const hintEl = document.getElementById('questionHint');
+            const numCorrect = q.correctIndices.length;
+
+            if (q.type === 'single') {
+                typeBadge.textContent = "Single-Choice (1 richtige Antwort)";
+                typeBadge.className = "inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200";
+                hintEl.textContent = "Klicke direkt auf die richtige Antwortoption:";
+            } else {
+                typeBadge.textContent = `Multiple-Choice (${numCorrect} richtige Antworten)`;
+                typeBadge.className = "inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-purple-50 text-purple-700 border border-purple-200";
+                hintEl.textContent = `Wähle alle zutreffenden Aussagen aus (${numCorrect} richtige Antworten) und klicke dann auf „Antwort prüfen“:`;
+            }
+
+            document.getElementById('questionText').textContent = q.question;
+
+            // Hide Feedback Box initially
+            document.getElementById('feedbackBox').classList.add('hidden');
+
+            const existingState = userResults[q.id];
+            renderMCOptions(q, existingState);
+
+            // Navigation Buttons
+            document.getElementById('prevBtn').disabled = (currentIndex === 0);
+            const nextBtnText = document.getElementById('nextBtnText');
+            if (currentIndex === activeQuestions.length - 1) {
+                nextBtnText.textContent = "Zur Gesamtauswertung";
+            } else {
+                nextBtnText.textContent = "Nächste Frage";
+            }
+        }
+
+        function renderMCOptions(q, existingState) {
+            const optionsList = document.getElementById('optionsList');
+            optionsList.innerHTML = '';
+
+            const multiSubmitWrapper = document.getElementById('multiSubmitWrapper');
+            if (q.type === 'multiple' && !existingState) {
+                multiSubmitWrapper.classList.remove('hidden');
+                updateMultiSelectCounter(q.correctIndices.length);
+            } else {
+                multiSubmitWrapper.classList.add('hidden');
+            }
+
+            q.displayOptions.forEach((optText, idx) => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.disabled = !!existingState;
+
+                const isSelected = existingState ? existingState.selectedIndices.includes(idx) : false;
+                const isCorrectOption = q.correctIndices.includes(idx);
+
+                let baseClasses = "option-btn w-full text-left p-4 rounded-2xl border-2 flex items-start gap-3.5 transition ";
+                let indicatorHTML = "";
+                let statusPillHTML = "";
+
+                if (!existingState) {
+                    baseClasses += "bg-slate-50/80 hover:bg-white border-slate-200 text-slate-800";
+                    if (q.type === 'multiple') {
+                        indicatorHTML = `<div id="chk-${idx}" class="w-5 h-5 mt-0.5 rounded-md border-2 border-slate-300 flex items-center justify-center shrink-0 bg-white text-transparent font-bold text-xs">✓</div>`;
+                    } else {
+                        const letter = String.fromCharCode(65 + idx);
+                        indicatorHTML = `<div class="w-7 h-7 rounded-lg bg-white border border-slate-200 flex items-center justify-center shrink-0 font-bold text-xs text-slate-600 shadow-2xs">${letter}</div>`;
+                    }
+                } else {
+                    // Evaluated state
+                    if (isCorrectOption && isSelected) {
+                        baseClasses += "bg-emerald-50 border-emerald-500 text-emerald-950 font-semibold";
+                        indicatorHTML = `<div class="w-6 h-6 mt-0.5 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0 text-xs font-bold">✓</div>`;
+                        statusPillHTML = `<span class="ml-auto shrink-0 text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-emerald-200/80 text-emerald-900">Richtig gewählt</span>`;
+                    } else if (isCorrectOption && !isSelected) {
+                        baseClasses += "bg-emerald-50/60 border-emerald-400 border-dashed text-emerald-900 font-medium";
+                        indicatorHTML = `<div class="w-6 h-6 mt-0.5 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0 text-xs font-bold">✓</div>`;
+                        statusPillHTML = `<span class="ml-auto shrink-0 text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-amber-200 text-amber-900">Richtig (gefehlt)</span>`;
+                    } else if (!isCorrectOption && isSelected) {
+                        baseClasses += "bg-rose-50 border-rose-500 text-rose-950 font-medium";
+                        indicatorHTML = `<div class="w-6 h-6 mt-0.5 rounded-full bg-rose-600 text-white flex items-center justify-center shrink-0 text-xs font-bold">✗</div>`;
+                        statusPillHTML = `<span class="ml-auto shrink-0 text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-rose-200 text-rose-900">Falsch gewählt</span>`;
+                    } else {
+                        baseClasses += "bg-slate-50 border-slate-200 text-slate-400 opacity-70";
+                        indicatorHTML = `<div class="w-6 h-6 mt-0.5 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center shrink-0 text-xs font-bold">•</div>`;
+                    }
+                }
+
+                btn.className = baseClasses;
+                btn.innerHTML = `
+                    ${indicatorHTML}
+                    <div class="flex-1 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <span class="text-sm sm:text-base leading-snug">${optText}</span>
+                        ${statusPillHTML}
+                    </div>
+                `;
+
+                if (!existingState) {
+                    if (q.type === 'single') {
+                        btn.onclick = () => evaluateSingleChoice(idx);
+                    } else {
+                        btn.onclick = () => toggleMultiOption(idx, btn, q.correctIndices.length);
+                    }
+                }
+
+                optionsList.appendChild(btn);
+            });
+
+            if (existingState) {
+                showFeedback(existingState.isCorrect, q.explanation);
+            }
+        }
+
+        function updateMultiSelectCounter(targetCount) {
+            const counterEl = document.getElementById('multiSelectCounter');
+            counterEl.textContent = `${currentMultiSelection.length} von ${targetCount} richtigen Antworten ausgewählt`;
+        }
+
+        function toggleMultiOption(idx, btnElement, targetCount) {
+            const pos = currentMultiSelection.indexOf(idx);
+            const chk = document.getElementById(`chk-${idx}`);
+            if (pos === -1) {
+                currentMultiSelection.push(idx);
+                btnElement.classList.remove('border-slate-200', 'bg-slate-50/80');
+                btnElement.classList.add('border-indigo-600', 'bg-indigo-50/50');
+                chk.classList.remove('border-slate-300', 'bg-white', 'text-transparent');
+                chk.classList.add('border-indigo-600', 'bg-indigo-600', 'text-white');
+            } else {
+                currentMultiSelection.splice(pos, 1);
+                btnElement.classList.add('border-slate-200', 'bg-slate-50/80');
+                btnElement.classList.remove('border-indigo-600', 'bg-indigo-50/50');
+                chk.classList.add('border-slate-300', 'bg-white', 'text-transparent');
+                chk.classList.remove('border-indigo-600', 'bg-indigo-600', 'text-white');
+            }
+            updateMultiSelectCounter(targetCount);
+        }
+
+        function evaluateSingleChoice(selectedIndex) {
+            const q = activeQuestions[currentIndex];
+            const isCorrect = q.correctIndices.includes(selectedIndex);
+
+            userResults[q.id] = {
+                answered: true,
+                isCorrect: isCorrect,
+                selectedIndices: [selectedIndex]
+            };
+
+            renderQuestion();
+        }
+
+        function evaluateMultipleChoice() {
+            const q = activeQuestions[currentIndex];
+            if (currentMultiSelection.length === 0) {
+                const btn = document.getElementById('checkMultiBtn');
+                btn.classList.add('ring-4', 'ring-amber-300');
+                setTimeout(() => btn.classList.remove('ring-4', 'ring-amber-300'), 500);
+                return;
+            }
+
+            const sortedSelected = [...currentMultiSelection].sort((a, b) => a - b);
+            const sortedCorrect = [...q.correctIndices].sort((a, b) => a - b);
+
+            const isCorrect = JSON.stringify(sortedSelected) === JSON.stringify(sortedCorrect);
+
+            userResults[q.id] = {
+                answered: true,
+                isCorrect: isCorrect,
+                selectedIndices: sortedSelected
+            };
+
+            renderQuestion();
+        }
+
+        // ============================================================================
+        // FEEDBACK & STATS
+        // ============================================================================
+        function showFeedback(isCorrect, explanationText) {
+            const feedbackBox = document.getElementById('feedbackBox');
+            const feedbackIcon = document.getElementById('feedbackIcon');
+            const feedbackTitle = document.getElementById('feedbackTitle');
+            const feedbackExplanation = document.getElementById('feedbackExplanation');
+
+            feedbackBox.classList.remove('hidden', 'bg-emerald-50', 'border-emerald-300', 'bg-rose-50', 'border-rose-300');
+            feedbackIcon.classList.remove('bg-emerald-600', 'bg-rose-600');
+            feedbackTitle.classList.remove('text-emerald-900', 'text-rose-900');
+
+            if (isCorrect) {
+                feedbackBox.classList.add('bg-emerald-50', 'border-emerald-300');
+                feedbackIcon.classList.add('bg-emerald-600');
+                feedbackIcon.textContent = '✓';
+                feedbackTitle.classList.add('text-emerald-900');
+                feedbackTitle.textContent = 'Vollständig richtig beantwortet!';
+            } else {
+                feedbackBox.classList.add('bg-rose-50', 'border-rose-300');
+                feedbackIcon.classList.add('bg-rose-600');
+                feedbackIcon.textContent = '✗';
+                feedbackTitle.classList.add('text-rose-900');
+                feedbackTitle.textContent = 'Nicht ganz richtig – diese Frage wird für den Wiederholungsmodus vorgemerkt.';
+            }
+
+            feedbackExplanation.textContent = explanationText;
+        }
+
+        function updateTopStats() {
+            const total = activeQuestions.length;
+            const answeredList = activeQuestions.map(q => userResults[q.id]).filter(Boolean);
+            const correctCount = answeredList.filter(r => r.isCorrect).length;
+            const wrongCount = answeredList.filter(r => !r.isCorrect).length;
+            const rate = answeredList.length > 0 ? Math.round((correctCount / answeredList.length) * 100) : 0;
+
+            document.getElementById('scoreCorrect').textContent = correctCount;
+            document.getElementById('scoreWrong').textContent = wrongCount;
+            document.getElementById('scoreRate').textContent = `${rate}%`;
+
+            document.getElementById('questionCounterText').textContent = `Frage ${currentIndex + 1} von ${total}`;
+            const pct = Math.round((answeredList.length / total) * 100);
+            document.getElementById('progressPercentText').textContent = `${pct}% bearbeitet (${answeredList.length}/${total})`;
+            document.getElementById('progressBar').style.width = `${Math.max(3, pct)}%`;
+        }
+
+        // ============================================================================
+        // NAVIGATION & END EVALUATION
+        // ============================================================================
+        function prevQuestion() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                renderQuestion();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function nextQuestion() {
+            if (currentIndex < activeQuestions.length - 1) {
+                currentIndex++;
+                renderQuestion();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } else {
+                showResultsScreen();
+            }
+        }
+
+        function showResultsScreen() {
+            document.getElementById('quizContainer').classList.add('hidden');
+            const resultScreen = document.getElementById('resultScreen');
+            resultScreen.classList.remove('hidden');
+
+            const total = activeQuestions.length;
+            let correctCount = 0;
+            let wrongQuestions = [];
+
+            activeQuestions.forEach(q => {
+                const res = userResults[q.id];
+                if (res && res.isCorrect) {
+                    correctCount++;
+                } else {
+                    wrongQuestions.push(q);
+                    if (!userResults[q.id]) {
+                        userResults[q.id] = { answered: true, isCorrect: false, selectedIndices: [] };
+                    }
+                }
+            });
+
+            const wrongCount = wrongQuestions.length;
+            const percent = total > 0 ? Math.round((correctCount / total) * 100) : 0;
+
+            document.getElementById('finalPercent').textContent = `${percent}%`;
+            document.getElementById('finalCorrect').textContent = correctCount;
+            document.getElementById('finalWrong').textContent = wrongCount;
+
+            const badgeIcon = document.getElementById('resultBadgeIcon');
+            const subtitle = document.getElementById('resultSubtitle');
+
+            if (percent >= 85) {
+                badgeIcon.textContent = '🏆';
+                subtitle.textContent = 'Starkes Ergebnis! Du beherrschst die Fragen zu festverzinslichen Wertpapieren und Aktien bereits sehr sicher.';
+            } else if (percent >= 65) {
+                badgeIcon.textContent = '👍';
+                subtitle.textContent = 'Gute Basis! Wiederhole jetzt gezielt die falsch beantworteten Fragen, bis alle Details sitzen.';
+            } else {
+                badgeIcon.textContent = '📚';
+                subtitle.textContent = 'Klicke jetzt auf „Nur falsche Fragen wiederholen“, um die noch unsicheren Fragen Schritt für Schritt zu meistern.';
+            }
+
+            const retryBtn = document.getElementById('retryWrongBtn');
+            const retryBtnText = document.getElementById('retryWrongBtnText');
+            if (wrongCount > 0) {
+                retryBtn.classList.remove('hidden');
+                retryBtnText.textContent = `Nur falsche Fragen wiederholen (${wrongCount})`;
+            } else {
+                retryBtn.classList.add('hidden');
+            }
+
+            // Render Missed Questions List
+            const missedContainer = document.getElementById('missedQuestionsContainer');
+            const missedList = document.getElementById('missedQuestionsList');
+            missedList.innerHTML = '';
+
+            if (wrongCount > 0) {
+                missedContainer.classList.remove('hidden');
+                wrongQuestions.forEach(q => {
+                    const item = document.createElement('div');
+                    item.className = "p-4 rounded-2xl bg-slate-50 border border-slate-200 text-sm space-y-2";
+                    
+                    const correctBullets = q.correctIndices.map(i => `• ${q.displayOptions[i]}`).join('\n');
+
+                    item.innerHTML = `
+                        <div class="flex items-center justify-between text-xs font-bold text-slate-400">
+                            <span>Frage #${q.id} • ${q.category} (${q.groupLabel})</span>
+                        </div>
+                        <p class="font-extrabold text-slate-900">${q.question}</p>
+                        <div class="text-emerald-800 bg-emerald-50/80 border border-emerald-200 rounded-xl p-3 font-medium whitespace-pre-line text-xs sm:text-sm"><span class="font-bold block mb-1">Richtige Antwort(en):</span>${correctBullets}</div>
+                    `;
+                    missedList.appendChild(item);
+                });
+            } else {
+                missedContainer.classList.add('hidden');
+            }
+
+            updateTopStats();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // ============================================================================
+        // OVERVIEW MODAL
+        // ============================================================================
+        function toggleOverviewModal() {
+            const modal = document.getElementById('overviewModal');
+            if (modal.classList.contains('hidden')) {
+                renderOverviewList();
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            } else {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        }
+
+        function renderOverviewList() {
+            const list = document.getElementById('overviewList');
+            list.innerHTML = '';
+
+            activeQuestions.forEach((q, idx) => {
+                const state = userResults[q.id];
+                let statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-500">Offen</span>`;
+                if (state) {
+                    statusBadge = state.isCorrect
+                        ? `<span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">✓ Richtig</span>`
+                        : `<span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-700">✗ Falsch</span>`;
+                }
+
+                const btn = document.createElement('button');
+                btn.className = `w-full text-left py-3 px-3 rounded-xl hover:bg-slate-50 transition flex items-center justify-between gap-3 ${idx === currentIndex ? 'bg-emerald-50/70 font-semibold' : ''}`;
+                btn.onclick = () => {
+                    currentIndex = idx;
+                    showQuizView();
+                    renderQuestion();
+                    toggleOverviewModal();
+                };
+
+                btn.innerHTML = `
+                    <div class="min-w-0 flex-1">
+                        <div class="text-xs text-slate-400 font-semibold">Frage ${idx + 1} (#${q.id}) • ${q.category} • ${q.type === 'single' ? 'Single-Choice' : 'Multiple-Choice'}</div>
+                        <div class="text-sm text-slate-800 truncate font-medium">${q.question}</div>
+                    </div>
+                    <div class="shrink-0">${statusBadge}</div>
+                `;
+                list.appendChild(btn);
+            });
+        }
+    </script>
+</body>
+</html>
